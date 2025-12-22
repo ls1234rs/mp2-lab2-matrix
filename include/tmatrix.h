@@ -4,172 +4,283 @@
 //
 //
 
-#ifndef __TDynamicMatrix_H__
-#define __TDynamicMatrix_H__
+#ifndef __TMATRIX_H__
+#define __TMATRIX_H__
 
 #include <iostream>
+#include <functional>
 
 using namespace std;
 
 const int MAX_VECTOR_SIZE = 100000000;
 const int MAX_MATRIX_SIZE = 10000;
 
-// Динамический вектор - 
-// шаблонный вектор на динамической памяти
-template<typename T>
-class TDynamicVector
+// Шаблон вектора
+template <class T>
+class TVector
 {
 protected:
-  size_t sz;
-  T* pMem;
+    T* pVector;
+    int Size; // размер вектора
+
 public:
-  TDynamicVector(size_t size = 1) : sz(size)
-  {
-    if (sz == 0)
-      throw out_of_range("Vector size should be greater than zero");
-    pMem = new T[sz]();// {}; // У типа T д.б. констуктор по умолчанию
-  }
-  TDynamicVector(T* arr, size_t s) : sz(s)
-  {
-    assert(arr != nullptr && "TDynamicVector ctor requires non-nullptr arg");
-    pMem = new T[sz];
-    std::copy(arr, arr + sz, pMem);
-  }
-  TDynamicVector(const TDynamicVector& v)
-  {
-  }
-  TDynamicVector(TDynamicVector&& v) noexcept
-  {
-  }
-  ~TDynamicVector()
-  {
-  }
-  TDynamicVector& operator=(const TDynamicVector& v)
-  {
-  }
-  TDynamicVector& operator=(TDynamicVector&& v) noexcept
-  {
-      return *this;
-  }
+    typedef function<T(size_t)> AllocatorFunc;
+    TVector(int s = 1, AllocatorFunc fnAlloc = nullptr);
+    TVector(const TVector& v); // конструктор копирования
+    ~TVector();
+    int GetSize() { return Size; } // размер вектора
+    T& operator[](int pos); // доступ
+    bool operator==(const TVector& v) const noexcept; // сравнение
+    bool operator!=(const TVector& v) const noexcept; // сравнение
+    TVector& operator=(const TVector& v); // присваивание
 
-  size_t size() const noexcept { return sz; }
+    // скалярные операции
+    TVector  operator+(const T& val);   // прибавить скаляр
+    TVector  operator-(const T& val);   // вычесть скаляр
+    TVector  operator*(const T& val);   // умножить на скаляр
 
-  // индексация
-  T& operator[](size_t ind)
-  {
-  }
-  const T& operator[](size_t ind) const
-  {
-  }
-  // индексация с контролем
-  T& at(size_t ind)
-  {
-  }
-  const T& at(size_t ind) const
-  {
-  }
+    // векторные операции
+    TVector  operator+(const TVector& v);     // сложение
+    TVector  operator-(const TVector& v);     // вычитание
+    T  operator*(const TVector& v);     // скалярное произведение
 
-  // сравнение
-  bool operator==(const TDynamicVector& v) const noexcept
-  {
-  }
-  bool operator!=(const TDynamicVector& v) const noexcept
-  {
-  }
-
-  // скалярные операции
-  TDynamicVector operator+(T val)
-  {
-  }
-  TDynamicVector operator-(double val)
-  {
-  }
-  TDynamicVector operator*(double val)
-  {
-  }
-
-  // векторные операции
-  TDynamicVector operator+(const TDynamicVector& v)
-  {
-  }
-  TDynamicVector operator-(const TDynamicVector& v)
-  {
-  }
-  T operator*(const TDynamicVector& v) noexcept(noexcept(T()))
-  {
-  }
-
-  friend void swap(TDynamicVector& lhs, TDynamicVector& rhs) noexcept
-  {
-    std::swap(lhs.sz, rhs.sz);
-    std::swap(lhs.pMem, rhs.pMem);
-  }
-
-  // ввод/вывод
-  friend istream& operator>>(istream& istr, TDynamicVector& v)
-  {
-    for (size_t i = 0; i < v.sz; i++)
-      istr >> v.pMem[i]; // требуется оператор>> для типа T
-    return istr;
-  }
-  friend ostream& operator<<(ostream& ostr, const TDynamicVector& v)
-  {
-    for (size_t i = 0; i < v.sz; i++)
-      ostr << v.pMem[i] << ' '; // требуется оператор<< для типа T
-    return ostr;
-  }
+    // ввод-вывод
+    friend istream& operator>>(istream& in, TVector& v)
+    {
+        for (int i = 0; i < v.Size; i++)
+            in >> v.pVector[i];
+        return in;
+    }
+    friend ostream& operator<<(ostream& out, const TVector& v)
+    {
+        for (int i = 0; i < v.Size; i++)
+            out << v.pVector[i] << ' ';
+        return out;
+    }
 };
 
-
-// Динамическая матрица - 
-// шаблонная матрица на динамической памяти
-template<typename T>
-class TDynamicMatrix : private TDynamicVector<TDynamicVector<T>>
+template <class T>
+TVector<T>::TVector(int s = 1, AllocatorFunc fnAlloc = nullptr) : Size(s)
 {
-  using TDynamicVector<TDynamicVector<T>>::pMem;
-  using TDynamicVector<TDynamicVector<T>>::sz;
+    if (s < 0 || s > MAX_VECTOR_SIZE) { throw exception("Invalid size"); }
+
+    pVector = new T[Size]();
+    if (fnAlloc)
+    {
+        for (size_t i = 0; i < Size; i++)
+        {
+            pVector[i] = fnAlloc(i);
+        }
+    }
+} /*-------------------------------------------------------------------------*/
+
+template <class T> //конструктор копирования
+TVector<T>::TVector(const TVector<T>& v) : Size(v.Size)
+{
+    pVector = new T[Size]();
+    for (int i = 0; i < Size; i++) { pVector[i] = v.pVector[i]; }
+} /*-------------------------------------------------------------------------*/
+
+template <class T>
+TVector<T>::~TVector()
+{
+    delete[] pVector;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // доступ
+T& TVector<T>::operator[](int pos)
+{
+    if (pos < 0 || pos > Size) { throw exception("Invalid position"); }
+
+    return pVector[pos];
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // сравнение
+bool TVector<T>::operator==(const TVector& v) const noexcept
+{
+    if (Size != v.Size) { return false; }
+
+    for (int i = 0; i < Size; i++)
+    {
+        if (pVector[i] != v.pVector[i]) { return false; }
+    }
+
+    return true;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // сравнение
+bool TVector<T>::operator!=(const TVector& v) const noexcept
+{
+    return !(*this == v);
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // присваивание
+TVector<T>& TVector<T>::operator=(const TVector& v)
+{
+    if (this != &v)
+    {
+        if (Size != v.Size)
+        {
+            Size = v.Size;
+            delete[] pVector;
+            pVector = new T[Size];
+        }
+        copy(v.pVector, v.pVector + Size, pVector);
+    }
+    return *this;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // прибавить скаляр
+TVector<T> TVector<T>::operator+(const T& val)
+{
+    TVector<T> temp(Size);
+
+    for (int i = 0; i < Size; i++) { temp[i] = pVector[i] + val; }
+    return temp;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // вычесть скаляр
+TVector<T> TVector<T>::operator-(const T& val)
+{
+    TVector<T> temp(Size);
+
+    for (int i = 0; i < Size; i++) { temp[i] = pVector[i] - val; }
+    return temp;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // умножить на скаляр
+TVector<T> TVector<T>::operator*(const T& val)
+{
+    TVector<T> temp(Size);
+
+    for (int i = 0; i < Size; i++) { temp[i] = pVector[i] * val; }
+    return temp;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // сложение
+TVector<T> TVector<T>::operator+(const TVector<T>& v)
+{
+    if (Size != v.Size) { throw exception("Invalid size"); }
+
+    TVector<T> temp(Size);
+
+    for (int i = 0; i < Size; i++) { temp.pVector[i] = pVector[i] + v.pVector[i]; }
+    return temp;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // вычитание
+TVector<T> TVector<T>::operator-(const TVector<T>& v)
+{
+    if (Size != v.Size) { throw exception("Invalid size"); }
+
+    TVector<T> temp(Size);
+
+    for (int i = 0; i < Size; i++) { temp.pVector[i] = pVector[i] - v.pVector[i]; }
+    return temp;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // скалярное произведение
+T TVector<T>::operator*(const TVector<T>& v)
+{
+    if (Size != v.Size) { throw exception("Invalid size"); }
+
+    int result = 0;
+    for (int i = 0; i < Size; i++) { result += pVector[i] * v.pVector[i]; }
+
+    return result;
+} /*-------------------------------------------------------------------------*/
+
+
+// Верхнетреугольная матрица
+template <class T>
+class TMatrix : public TVector<TVector<T>>
+{
 public:
-  TDynamicMatrix(size_t s = 1) : TDynamicVector<TDynamicVector<T>>(s)
-  {
-    for (size_t i = 0; i < sz; i++)
-      pMem[i] = TDynamicVector<T>(sz);
-  }
+    TMatrix(int s = 5);
+    TMatrix(const TMatrix& mt);                    // копирование
+    TMatrix(const TVector<TVector<T> >& mt); // преобразование типа
+    bool operator==(const TMatrix& mt) const;      // сравнение
+    bool operator!=(const TMatrix& mt) const;      // сравнение
+    TMatrix& operator= (const TMatrix& mt);        // присваивание
+    TMatrix  operator+ (const TMatrix& mt);        // сложение
+    TMatrix  operator- (const TMatrix& mt);        // вычитание
 
-  using TDynamicVector<TDynamicVector<T>>::operator[];
-
-  // сравнение
-  bool operator==(const TDynamicMatrix& m) const noexcept
-  {
-  }
-
-  // матрично-скалярные операции
-  TDynamicVector<T> operator*(const T& val)
-  {
-  }
-
-  // матрично-векторные операции
-  TDynamicVector<T> operator*(const TDynamicVector<T>& v)
-  {
-  }
-
-  // матрично-матричные операции
-  TDynamicMatrix operator+(const TDynamicMatrix& m)
-  {
-  }
-  TDynamicMatrix operator-(const TDynamicMatrix& m)
-  {
-  }
-  TDynamicMatrix operator*(const TDynamicMatrix& m)
-  {
-  }
-
-  // ввод/вывод
-  friend istream& operator>>(istream& istr, TDynamicMatrix& v)
-  {
-  }
-  friend ostream& operator<<(ostream& ostr, const TDynamicMatrix& v)
-  {
-  }
+    // ввод / вывод
+    friend istream& operator>>(istream& in, TMatrix& mt)
+    {
+        for (int i = 0; i < mt.Size; i++)
+            in >> mt.pVector[i];
+        return in;
+    }
+    friend ostream& operator<<(ostream& out, const TMatrix& mt)
+    {
+        for (int i = 0; i < mt.Size; i++)
+            out << mt.pVector[i] << endl;
+        return out;
+    }
 };
+
+template <class T>
+TMatrix<T>::TMatrix(int s) : TVector<TVector<T> >(s, [s](size_t i) { return TVector<T>(s); })
+{
+    if (s < 0 || s > MAX_MATRIX_SIZE) { throw exception("Invalid size"); }
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // конструктор копирования
+TMatrix<T>::TMatrix(const TMatrix<T>& mt) :
+    TVector<TVector<T> >(mt) {}
+
+template <class T> // конструктор преобразования типа
+TMatrix<T>::TMatrix(const TVector<TVector<T> >& mt) :
+    TVector<TVector<T> >(mt) {}
+
+template <class T> // сравнение
+bool TMatrix<T>::operator==(const TMatrix<T>& mt) const
+{
+    if (Size != mt.Size) { return false; }
+
+    for (int i = 0; i < Size; i++)
+    {
+        if (pVector[i] != mt.pVector[i]) { return false; }
+    }
+    return true;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // сравнение
+bool TMatrix<T>::operator!=(const TMatrix<T>& mt) const
+{
+    return !(*this == mt);
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // присваивание
+TMatrix<T>& TMatrix<T>::operator=(const TMatrix<T>& mt)
+{
+    if (this != &mt) { TVector<TVector<T>>::operator=(mt); }
+
+    return *this;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // сложение
+TMatrix<T> TMatrix<T>::operator+(const TMatrix<T>& mt)
+{
+    if (Size != mt.Size) { throw exception("Invalid size"); }
+
+    TMatrix<T> result(Size);
+
+    for (int i = 0; i < Size; i++) { result.pVector[i] = pVector[i] + mt.pVector[i]; }
+    return result;
+} /*-------------------------------------------------------------------------*/
+
+template <class T> // вычитание
+TMatrix<T> TMatrix<T>::operator-(const TMatrix<T>& mt)
+{
+    if (Size != mt.Size) { throw exception("Invalid size"); }
+
+    TMatrix<T> result(Size);
+
+    for (int i = 0; i < Size; i++) { result.pVector[i] = pVector[i] - mt.pVector[i]; }
+    return result;
+}
 
 #endif
+

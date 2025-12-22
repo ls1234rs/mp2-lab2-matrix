@@ -2,110 +2,176 @@
 
 #include <gtest.h>
 
-TEST(TDynamicMatrix, can_create_matrix_with_positive_length)
+
+TEST(TMatrix, can_create_matrix_with_positive_length)
 {
-  ASSERT_NO_THROW(TDynamicMatrix<int> m(5));
+	ASSERT_NO_THROW(TMatrix<int> m(5));
 }
 
-TEST(TDynamicMatrix, cant_create_too_large_matrix)
+TEST(TMatrix, cant_create_too_large_matrix)
 {
-  ASSERT_ANY_THROW(TDynamicMatrix<int> m(MAX_MATRIX_SIZE + 1));
+	ASSERT_ANY_THROW(TMatrix<int> m(MAX_MATRIX_SIZE + 1));
 }
 
-TEST(TDynamicMatrix, throws_when_create_matrix_with_negative_length)
+TEST(TMatrix, throws_when_create_matrix_with_negative_length)
 {
-  ASSERT_ANY_THROW(TDynamicMatrix<int> m(-5));
+	ASSERT_ANY_THROW(TMatrix<int> m(-5));
 }
 
-TEST(TDynamicMatrix, can_create_copied_matrix)
+TEST(TMatrix, can_create_copied_matrix)
 {
-  TDynamicMatrix<int> m(5);
+	TMatrix<int> m(5);
 
-  ASSERT_NO_THROW(TDynamicMatrix<int> m1(m));
+	ASSERT_NO_THROW(TMatrix<int> m1(m));
 }
 
-TEST(TDynamicMatrix, copied_matrix_is_equal_to_source_one)
+TEST(TMatrix, copied_matrix_is_equal_to_source_one)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(5);
+	TMatrix<int> m1(m);
+
+	EXPECT_EQ(m, m1);
 }
 
-TEST(TDynamicMatrix, copied_matrix_has_its_own_memory)
+TEST(TMatrix, copied_matrix_has_its_own_memory)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(2);
+	m[0][0] = 1;
+
+	TMatrix<int> m1(m);
+	m1[0][0] = 2;
+
+	EXPECT_NE(m, m1);
 }
 
-TEST(TDynamicMatrix, can_get_size)
+TEST(TMatrix, can_get_size)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(5);
+
+	EXPECT_EQ(5, m.GetSize());
 }
 
-TEST(TDynamicMatrix, can_set_and_get_element)
+TEST(TMatrix, can_set_and_get_element)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(5);
+
+	int i = 1;
+	m[i][i] = i;
+
+	EXPECT_EQ(m[i][i], i);
 }
 
-TEST(TDynamicMatrix, throws_when_set_element_with_negative_index)
+TEST(TMatrix, throws_when_set_element_with_negative_index)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(5);
+	int i = 1;
+
+	ASSERT_ANY_THROW(m[-1][0] = i);
 }
 
-TEST(TDynamicMatrix, throws_when_set_element_with_too_large_index)
+TEST(TMatrix, throws_when_set_element_with_too_large_index)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(5);
+
+	ASSERT_ANY_THROW(m[100][0] = 1);
 }
 
-TEST(TDynamicMatrix, can_assign_matrix_to_itself)
+TEST(TMatrix, can_assign_matrix_to_itself)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(5);
+	ASSERT_NO_THROW(m = m);
 }
 
-TEST(TDynamicMatrix, can_assign_matrices_of_equal_size)
+TEST(TMatrix, can_assign_matrices_of_equal_size)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(5);
+	TMatrix<int> m1(5);
+	ASSERT_NO_THROW(m = m1);
 }
 
-TEST(TDynamicMatrix, assign_operator_change_matrix_size)
+TEST(TMatrix, assign_operator_change_matrix_size)
 {
-  ADD_FAILURE();
+	int size1 = 1, size2 = 2;
+	TMatrix<int> m(size1);
+	TMatrix<int> m1(size2);
+
+	m = m1;
+
+	EXPECT_EQ(m.GetSize(), m1.GetSize());
 }
 
-TEST(TDynamicMatrix, can_assign_matrices_of_different_size)
+TEST(TMatrix, can_assign_matrices_of_different_size)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(2);
+	TMatrix<int> m1(1);
+
+	m1[0][0] = 1;
+
+	ASSERT_NO_THROW(m = m1);
 }
 
-TEST(TDynamicMatrix, compare_equal_matrices_return_true)
+TEST(TMatrix, compare_equal_matrices_return_true)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(2);
+	TMatrix<int> m1(2);
+
+	m[0][0] = 1; m[1][0] = 2;
+	m1[0][0] = 1; m1[1][0] = 2;
+
+	EXPECT_EQ(m, m1);
 }
 
-TEST(TDynamicMatrix, compare_matrix_with_itself_return_true)
+TEST(TMatrix, compare_matrix_with_itself_return_true)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(2);
+
+	m[0][0] = 1;
+
+	EXPECT_EQ(m, m);
 }
 
-TEST(TDynamicMatrix, matrices_with_different_size_are_not_equal)
+TEST(TMatrix, matrices_with_different_size_are_not_equal)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(1);
+	TMatrix<int> m1(2);
+
+	EXPECT_NE(m, m1);
 }
 
-TEST(TDynamicMatrix, can_add_matrices_with_equal_size)
+TEST(TMatrix, can_add_matrices_with_equal_size)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(1);
+	TMatrix<int> m1(1);
+
+	m[0][0] = 1;
+	m1[0][0] = 2;
+
+	EXPECT_NO_THROW(m + m1);
 }
 
-TEST(TDynamicMatrix, cant_add_matrices_with_not_equal_size)
+TEST(TMatrix, cant_add_matrices_with_not_equal_size)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(1);
+	TMatrix<int> m1(5);
+
+	ASSERT_ANY_THROW(m + m1);
 }
 
-TEST(TDynamicMatrix, can_subtract_matrices_with_equal_size)
+TEST(TMatrix, can_subtract_matrices_with_equal_size)
 {
-  ADD_FAILURE();
+	TMatrix<int> m(1);
+	TMatrix<int> m1(1);
+
+	m[0][0] = 1;
+	m1[0][0] = 2;
+
+	EXPECT_NO_THROW(m - m1);
 }
 
-TEST(TDynamicMatrix, cant_subtract_matrixes_with_not_equal_size)
+TEST(TMatrix, cant_subtract_matrixes_with_not_equal_size)
 {
-  ADD_FAILURE();
-}
+	TMatrix<int> m(1);
+	TMatrix<int> m1(5);
 
+	ASSERT_ANY_THROW(m - m1);
+}
